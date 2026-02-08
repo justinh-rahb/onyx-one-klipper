@@ -168,7 +168,7 @@
         
         <div style="padding: 2rem; text-align: center; color: #666; font-size: 0.8rem;">
             Markforged Onyx One Klipper Config Generator<br>
-            <a href="https://github.com/justinh-rahb/klipper-onyx-one" style="color: #666; text-decoration: none;">View on GitHub</a>
+            <a href="https://github.com/justinh-rahb/onyx-one-klipper" style="color: #666; text-decoration: none;">View on GitHub</a>
         </div>
 
     </div>
@@ -217,9 +217,9 @@
     async function init() {
         try {
             const [boardsRes, templateRes, macrosRes] = await Promise.all([
-                fetch('../configs/boards.json'),
-                fetch('../configs/printer.cfg.template'),
-                fetch('../configs/macros.cfg')
+                fetch('./configs/boards.json'),
+                fetch('./configs/printer.cfg.template'),
+                fetch('./configs/macros.cfg')
             ]);
 
             const boardsData = await boardsRes.json();

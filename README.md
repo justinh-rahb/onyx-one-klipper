@@ -26,7 +26,7 @@ The Onyx One uses a **non-standard hybrid kinematic** — one diagonal belt (Cor
 
 ### Option A: Config Generator (Recommended)
 
-👉 **[Open the Config Generator](https://justinh-rahb.github.io/klipper-onyx-one/)** 👈
+👉 **[Open the Config Generator](https://justinh-rahb.github.io/onyx-one-klipper/)** 👈
 
 1. Pick your controller board
 2. Adjust options (endstop polarity, thermistor type, etc.)
@@ -136,10 +136,8 @@ Got it working on a different board? Open a PR to add your board to `configs/boa
 
 ## License
 
-MIT
+[MIT License](LICENSE)
 
 ## Credits
 
 This project exists because someone refused to let good hardware die, debugged kinematics at 3am, and had the patience to tell an AI "no, it's actually broken" until the math was right.
-
-
