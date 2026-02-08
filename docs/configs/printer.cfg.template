@@ -179,13 +179,6 @@ unretract_speed: 40
 [idle_timeout]
 timeout: 600
 
-[virtual_sdcard]
-path: ~/printer_data/gcodes
-
-[pause_resume]
-
-[display_status]
-
-[respond]
-
-[exclude_object]
+# This config assumes MainsailOS or FluiddPi.
+# [virtual_sdcard], [pause_resume], [display_status], [respond],
+# and [exclude_object] are provided by your frontend's default includes.
