@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Onyx One Klipper Config Generator</title>
+    <link rel="stylesheet" href="assets/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+</head>
+<body>
+
+<header>
+    <div>
+        <h1>Onyx One Config Generator</h1>
+        <span class="subtitle">Unofficial Klipper Configuration Utility</span>
+    </div>
+    <div style="font-size: 0.8rem; color: #888;">
+        v1.0.0
+    </div>
+</header>
+
+<main>
+    <!-- Left Panel: Controls -->
+    <div class="controls-panel">
+        
+        <!-- Board Selection -->
+        <div class="control-section">
+            <h2>Controller Board</h2>
+            <div class="form-group">
+                <label for="board-select">Select Board</label>
+                <div style="display: flex; align-items: center;">
+                    <select id="board-select">
+                        <option value="" disabled selected>Loading boards...</option>
+                    </select>
+                    <span id="board-badge" class="badge" style="display: none;"></span>
+                </div>
+                <div class="tooltip" id="board-notes"></div>
+            </div>
+            <div class="form-group">
+                <label for="serial-path">Serial Path / ID</label>
+                <input type="text" id="serial-path" placeholder="/dev/serial/by-id/...">
+            </div>
+        </div>
+
+        <!-- Options -->
+        <div class="control-section">
+            <h2>Machine Options</h2>
+            
+            <details open>
+                <summary>Homing & Endstops</summary>
+                <div class="details-content">
+                    <div class="form-group">
+                        <label>X Axis Homing</label>
+                        <select id="opt-homing-x">
+                            <option value="max">Max (Right) - Default</option>
+                            <option value="min">Min (Left)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Y Axis Homing</label>
+                        <select id="opt-homing-y">
+                            <option value="max">Max (Back) - Default</option>
+                            <option value="min">Min (Front)</option>
+                        </select>
+                    </div>
+                    <!-- Z is always Min for bed slinger/cantilever usually, but let's leave it fixed or add if needed. Onyx One homes Z min (bed goes up to nozzle). -->
+                    
+                    <div class="form-group" style="padding-top: 0.5rem; border-top: 1px dashed #444;">
+                         <label>Endstop Polarity (Global)</label>
+                         <select id="opt-endstop-polarity">
+                             <option value="" selected>Normal (Closing/Types dependent)</option>
+                             <option value="^">Pull-up (^)</option>
+                             <option value="!">Inverted (!)</option>
+                             <option value="^!">Pull-up + Inverted (^!)</option>
+                         </select>
+                         <div class="tooltip">Check your board schematic. Most need '^!'.</div>
+                    </div>
+                </div>
+            </details>
+
+            <details>
+                <summary>Components</summary>
+                <div class="details-content">
+                    <div class="form-group">
+                        <label>Thermistor Type</label>
+                        <select id="opt-thermistor">
+                            <option value="EPCOS 100K B57560G104F">EPCOS 100K (Default)</option>
+                            <option value="ATC Semitec 104GT-2">ATC Semitec 104GT-2</option>
+                            <option value="Generic 3950">Generic 3950</option>
+                            <option value="NTC 100K beta 3950">NTC 100K beta 3950</option>
+                        </select>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="opt-fw-retraction" checked>
+                        <label for="opt-fw-retraction">Enable Firmware Retraction</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="opt-input-shaper" checked>
+                        <label for="opt-input-shaper">Include Input Shaper (Commented)</label>
+                    </div>
+                </div>
+            </details>
+        </div>
+
+        <!-- Pin Overrides -->
+        <div class="control-section">
+            <h2>Pin Assignments</h2>
+            <div class="tooltip" style="margin-bottom: 1rem;">
+                Change these if your wiring differs from standard.
+            </div>
+
+            <details>
+                <summary>Stepper A (Left/Red Belt)</summary>
+                <div class="details-content">
+                    <div class="form-group"><label>Step Pin</label><input type="text" data-pin="stepper_a_step"></div>
+                    <div class="form-group"><label>Dir Pin</label><input type="text" data-pin="stepper_a_dir"></div>
+                    <div class="form-group"><label>Enable Pin</label><input type="text" data-pin="stepper_a_enable"></div>
+                </div>
+            </details>
+
+            <details>
+                <summary>Stepper B (Right/Yellow Belt)</summary>
+                <div class="details-content">
+                    <div class="form-group"><label>Step Pin</label><input type="text" data-pin="stepper_b_step"></div>
+                    <div class="form-group"><label>Dir Pin</label><input type="text" data-pin="stepper_b_dir"></div>
+                    <div class="form-group"><label>Enable Pin</label><input type="text" data-pin="stepper_b_enable"></div>
+                </div>
+            </details>
+
+            <details>
+                <summary>Stepper Z (Bed)</summary>
+                <div class="details-content">
+                    <div class="form-group"><label>Step Pin</label><input type="text" data-pin="stepper_z_step"></div>
+                    <div class="form-group"><label>Dir Pin</label><input type="text" data-pin="stepper_z_dir"></div>
+                    <div class="form-group"><label>Enable Pin</label><input type="text" data-pin="stepper_z_enable"></div>
+                </div>
+            </details>
+
+            <details>
+                <summary>Extruder</summary>
+                <div class="details-content">
+                    <div class="form-group"><label>Step Pin</label><input type="text" data-pin="extruder_step"></div>
+                    <div class="form-group"><label>Dir Pin</label><input type="text" data-pin="extruder_dir"></div>
+                    <div class="form-group"><label>Enable Pin</label><input type="text" data-pin="extruder_enable"></div>
+                </div>
+            </details>
+            
+            <details>
+                <summary>Endstops</summary>
+                <div class="details-content">
+                    <div class="form-group"><label>X Endstop</label><input type="text" data-pin="endstop_x"></div>
+                    <div class="form-group"><label>Y Endstop</label><input type="text" data-pin="endstop_y"></div>
+                    <div class="form-group"><label>Z Endstop</label><input type="text" data-pin="endstop_z"></div>
+                </div>
+            </details>
+
+            <details>
+                <summary>Heaters & Fans</summary>
+                <div class="details-content">
+                    <div class="form-group"><label>Heater Hotend</label><input type="text" data-pin="heater_hotend"></div>
+                    <div class="form-group"><label>Thermistor Pin</label><input type="text" data-pin="sensor_hotend"></div>
+                    <div class="form-group"><label>Part Fan</label><input type="text" data-pin="fan_part"></div>
+                    <div class="form-group"><label>Hotend Fan</label><input type="text" data-pin="fan_hotend"></div>
+                </div>
+            </details>
+        </div>
+        
+        <div style="padding: 2rem; text-align: center; color: #666; font-size: 0.8rem;">
+            Markforged Onyx One Klipper Config Generator<br>
+            <a href="https://github.com/justinh-rahb/klipper-onyx-one" style="color: #666; text-decoration: none;">View on GitHub</a>
+        </div>
+
+    </div>
+
+    <!-- Right Panel: Preview & Actions -->
+    <div class="preview-panel">
+        <div id="code-preview">Loading templates...</div>
+        
+        <div class="action-bar">
+            <button class="btn btn-primary" id="btn-download">Download Configuration Bundle</button>
+        </div>
+    </div>
+</main>
+
+<script>
+    // State
+    const STATE = {
+        boards: {},
+        currentBoardId: null,
+        pinOverrides: {},
+        template: "",
+        macros: "",
+        generatedConfig: ""
+    };
+
+    // DOM Elements
+    const els = {
+        boardSelect: document.getElementById('board-select'),
+        boardBadge: document.getElementById('board-badge'),
+        boardNotes: document.getElementById('board-notes'),
+        serialPath: document.getElementById('serial-path'),
+        preview: document.getElementById('code-preview'),
+        btnDownload: document.getElementById('btn-download'),
+        pinInputs: document.querySelectorAll('input[data-pin]'),
+        
+        // Options
+        optHomingX: document.getElementById('opt-homing-x'),
+        optHomingY: document.getElementById('opt-homing-y'),
+        optPolarity: document.getElementById('opt-endstop-polarity'),
+        optThermistor: document.getElementById('opt-thermistor'),
+        optFwRetraction: document.getElementById('opt-fw-retraction'),
+        optInputShaper: document.getElementById('opt-input-shaper')
+    };
+
+    // Load Resources
+    async function init() {
+        try {
+            const [boardsRes, templateRes, macrosRes] = await Promise.all([
+                fetch('../configs/boards.json'),
+                fetch('../configs/printer.cfg.template'),
+                fetch('../configs/macros.cfg')
+            ]);
+
+            const boardsData = await boardsRes.json();
+            STATE.boards = boardsData.boards;
+            STATE.template = await templateRes.text();
+            STATE.macros = await macrosRes.text();
+
+            populateBoards();
+            generatePreview(); // Initial generation
+
+        } catch (e) {
+            els.preview.textContent = "Error loading resources: " + e.message;
+            console.error(e);
+        }
+    }
+
+    // Populate Board Dropdown
+    function populateBoards() {
+        els.boardSelect.innerHTML = '<option value="" disabled selected>Select a board...</option>';
+        for (const [id, board] of Object.entries(STATE.boards)) {
+            const opt = document.createElement('option');
+            opt.value = id;
+            opt.textContent = board.name;
+            els.boardSelect.appendChild(opt);
+        }
+        
+        // Listener
+        els.boardSelect.addEventListener('change', (e) => loadBoard(e.target.value));
+    }
+
+    // Load Board Data
+    function loadBoard(boardId) {
+        const board = STATE.boards[boardId];
+        STATE.currentBoardId = boardId;
+        STATE.pinOverrides = { ...board.pins }; // Reset overrides to board default
+
+        // Update UI
+        els.boardBadge.textContent = board.verified ? "Verified" : "Unverified";
+        els.boardBadge.className = `badge ${board.verified ? 'badge-verified' : 'badge-unverified'}`;
+        els.boardBadge.style.display = 'inline-block';
+        
+        els.boardNotes.textContent = board.notes || "";
+        els.serialPath.value = board.serial_hint || "";
+
+        // Populate Pin Inputs
+        updatePinInputs();
+        
+        generatePreview();
+    }
+
+    // Update Pin Inputs from State
+    function updatePinInputs() {
+        els.pinInputs.forEach(input => {
+            const pinKey = input.dataset.pin;
+            if (STATE.pinOverrides[pinKey]) {
+                input.value = STATE.pinOverrides[pinKey];
+            }
+        });
+    }
+
+    // Capture Pin Changes
+    els.pinInputs.forEach(input => {
+        input.addEventListener('input', (e) => {
+            const pinKey = e.target.dataset.pin;
+            STATE.pinOverrides[pinKey] = e.target.value;
+            generatePreview();
+        });
+    });
+
+    // Capture Option Changes
+    [els.serialPath, els.optHomingX, els.optHomingY, els.optPolarity, els.optThermistor, els.optFwRetraction, els.optInputShaper].forEach(el => {
+        el.addEventListener('input', generatePreview);
+        el.addEventListener('change', generatePreview);
+    });
+
+    // Core Generation Logic
+    function generatePreview() {
+        if (!STATE.template) return;
+
+        let config = STATE.template;
+        const pins = STATE.pinOverrides;
+        
+        // 1. Basic Replacements
+        const boardName = STATE.currentBoardId ? STATE.boards[STATE.currentBoardId].name : "Unknown Board";
+        const baud = STATE.currentBoardId ? STATE.boards[STATE.currentBoardId].baud : 250000;
+        
+        config = config.replaceAll('{{BOARD_NAME}}', boardName);
+        config = config.replaceAll('{{GH_PAGES_URL}}', window.location.hostname + window.location.pathname); // Approximation
+        config = config.replaceAll('{{SERIAL_PATH}}', els.serialPath.value || "/dev/serial/by-id/...");
+        config = config.replaceAll('{{BAUD}}', baud);
+
+        // 2. Pin Replacements
+        for (const [key, val] of Object.entries(pins)) {
+            config = config.replaceAll(`{{${key.toUpperCase()}}}`, val);
+        }
+        // Also handle pins that might not be in the board def but are in inputs
+        els.pinInputs.forEach(input => {
+            const key = input.dataset.pin;
+            const val = input.value;
+            config = config.replaceAll(`{{${key.toUpperCase()}}}`, val);
+        });
+
+        // 3. Logic & Options
+        
+        // Endstop Polarity Prefix
+        const polarity = els.optPolarity.value;
+        config = config.replaceAll('{{ENDSTOP_PREFIX_X}}', polarity);
+        config = config.replaceAll('{{ENDSTOP_PREFIX_Y}}', polarity);
+        config = config.replaceAll('{{ENDSTOP_PREFIX_Z}}', polarity);
+
+        // Homing Positions
+        const xHomeMax = els.optHomingX.value === 'max';
+        const yHomeMax = els.optHomingY.value === 'max';
+        
+        config = config.replaceAll('{{X_ENDSTOP_POS}}', xHomeMax ? 320 : 0);
+        config = config.replaceAll('{{Y_ENDSTOP_POS}}', yHomeMax ? 132 : 0);
+        
+        // Homing Direction Boolean Blocks
+        // Helper regex for mustache-like boolean: {{#KEY}}content{{/KEY}}
+        const replaceBlock = (text, key, condition) => {
+            const regex = new RegExp(`\\{\\{#${key}\\}\\}([\\s\\S]*?)\\{\\{\\/${key}\\}\\}`, 'g');
+            return text.replace(regex, (match, content) => condition ? content : '');
+        };
+
+        config = replaceBlock(config, 'X_HOME_MAX', xHomeMax);
+        config = replaceBlock(config, 'Y_HOME_MAX', yHomeMax);
+        config = replaceBlock(config, 'FIRMWARE_RETRACTION', els.optFwRetraction.checked);
+        config = replaceBlock(config, 'INPUT_SHAPER', els.optInputShaper.checked);
+        
+        // Thermistor
+        config = config.replaceAll('{{THERMISTOR_TYPE}}', els.optThermistor.value);
+
+        STATE.generatedConfig = config;
+        els.preview.textContent = config;
+    }
+
+    // Download Handler
+    els.btnDownload.addEventListener('click', () => {
+        if (!STATE.generatedConfig) return;
+
+        const zip = new JSZip();
+        zip.file("printer.cfg", STATE.generatedConfig);
+        zip.file("macros.cfg", STATE.macros);
+        
+        const readme = `Markforged Onyx One Klipper Config Bundle
+Generated on: ${new Date().toISOString()}
+
+INSTRUCTIONS:
+1. Flash your board (${els.boardSelect.options[els.boardSelect.selectedIndex]?.text || "Unknown"}).
+   - Refer to Klipper docs for your specific board.
+2. Copy 'printer.cfg' and 'macros.cfg' to your Klipper config directory (usually ~/printer_data/config).
+3. Restart Klipper.
+4. Run checks:
+   - Verify temperature sensors.
+   - Test endstops (query_endstops) manually.
+   - Test motor directions (STEPPER_BUZZ STEPPER=stepper_a).
+     - Stepper A (Left/Red) positive move should move head Right+Back diagonal.
+     - Stepper B (Right/Yellow) positive move should move head Right+Front diagonal.
+   - Home axes one by one (G28 X, G28 Y, G28 Z).
+
+WARNING:
+This configuration is a starting point. Always verify pins and directions before full motion.
+`;
+        zip.file("README_QUICKSTART.txt", readme);
+
+        zip.generateAsync({type:"blob"}).then(function(content) {
+            saveAs(content, "onyx-klipper-config.zip");
+        });
+    });
+
+    // Start
+    init();
+
+</script>
+</body>
+</html>
